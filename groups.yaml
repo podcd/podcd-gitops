@@ -3,6 +3,3 @@ apiVersion: gitops.podcd.io/v1
 kind: Group
 metadata:
   name: local
-spec:
-  applications:
-    - local
