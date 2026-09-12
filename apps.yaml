@@ -31,7 +31,7 @@ spec:
       image: docker.io/library/nginx@sha256:72ba65eb42c10344912a84ff42408db7d34f2feb642204570ab8fc5ffd29f1d3
       ports:
         - containerPort: 80
-          hostPort: 8080
+          hostPort: 8081
           hostIP: 127.0.0.1
       readinessProbe:
         httpGet:
