@@ -6,7 +6,8 @@ metadata:
   name: local
 spec:
   environment: local
-  groups: local
+  groups: 
+    - local
   applications:
     - local
     
