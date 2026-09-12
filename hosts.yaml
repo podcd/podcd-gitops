@@ -1,4 +1,3 @@
----
 # A single local host running a minimal nginx example.
 apiVersion: gitops.podcd.io/v1
 kind: Host

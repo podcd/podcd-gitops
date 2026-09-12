@@ -1,5 +1,0 @@
-# A Group is a role: what a machine is for. Hosts join groups;
-apiVersion: gitops.podcd.io/v1
-kind: Group
-metadata:
-  name: local
