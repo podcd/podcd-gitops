@@ -22,9 +22,7 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: local
-  labels:
-    app: local
+  name: local-pod
 spec:
   restartPolicy: Always
   terminationGracePeriodSeconds: 30
