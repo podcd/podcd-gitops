@@ -4,6 +4,3 @@ apiVersion: gitops.podcd.io/v1
 kind: Environment
 metadata:
   name: local
-spec:
-  applications:
-    - local
