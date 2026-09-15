@@ -5,4 +5,5 @@ metadata:
 spec:
   environment: prd
   groups:
+    - all
     - dmz

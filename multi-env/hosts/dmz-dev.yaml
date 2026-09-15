@@ -5,4 +5,5 @@ metadata:
 spec:
   environment: dev
   groups:
+    - all
     - dmz
