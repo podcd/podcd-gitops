@@ -1,0 +1,6 @@
+kind: Group
+metadata:
+  name: dmz
+spec:
+  values:
+    - values/common.yaml
