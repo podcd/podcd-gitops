@@ -1,7 +1,7 @@
 apiVersion: gitops.podcd.io/v1
 kind: Group
 metadata:
-  name: dmz
+  name: all
 spec:
   values:
     - values/common.yaml
