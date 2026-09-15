@@ -7,5 +7,3 @@ repositories:
     revision: main
     values:
       - values/common.yaml
-      - values/zones/iso.yaml
-      - values/envs/prd.yaml

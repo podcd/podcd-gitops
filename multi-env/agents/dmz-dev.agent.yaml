@@ -2,6 +2,12 @@
 # podcd loader ignores it) and podcd never reads it from Git. It belongs on
 # the dmz-dev VM itself, at ~/.config/podcd/agent.yaml, installed by
 # `podcd install` or `podcd config create` and edited with `podcd config set`.
+#
+# Notice how little is host-specific: which host, which repo, and one
+# universal fallback value. Which environment and which zone this host is -
+# and the values that go with them - are declared in Git instead, on the
+# Environment and Group documents this Host selects (environments/dev.yaml,
+# groups/dmz.yaml), not here. agent.yaml stays a pointer, fire-and-forget.
 host: dmz-dev
 repositories:
   - name: gitops
@@ -10,5 +16,3 @@ repositories:
     revision: main
     values:
       - values/common.yaml
-      - values/zones/dmz.yaml
-      - values/envs/dev.yaml

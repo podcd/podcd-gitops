@@ -1,16 +1,5 @@
 # edge-api is the public-facing application for the dmz zone.
-#
-# Its image and sizing come from {{ .Values }} rather than being written
-# here, because this one Application document is shared by every zone/
-# environment combination that runs it (currently dmz-dev and dmz-prd): the
-# document says what the app *is*, values say what it is *for this host*.
-#
-# It also renders for iso-dev and iso-prd, which never run edge-api at all -
-# every document in the tree renders for every host that loads it, selection
-# happens afterwards in Resolve. That is why repository/tag are `required`
-# (values/common.yaml and values/envs/ supply them for every host) while
-# publicHostname, which only dmz sets, is read with a conditional block
-# instead: a field only the zone that uses it must provide.
+
 apiVersion: gitops.podcd.io/v1
 kind: Application
 metadata:
@@ -19,9 +8,7 @@ spec:
   image: '{{ required "edgeApi.image.repository is required" .Values.edgeApi.image.repository }}:{{ required "edgeApi.image.tag is required" .Values.edgeApi.image.tag }}'
   env:
     LOG_LEVEL: '{{ default "info" .Values.logLevel }}'
-{{- if .Values.publicHostname }}
-    PUBLIC_HOSTNAME: '{{ .Values.publicHostname }}'
-{{- end }}
+    PUBLIC_HOSTNAME: '{{ default "" .Values.publicHostname }}'
   resources:
     memory: '{{ default "256M" .Values.resources.memory }}'
     cpu: '{{ default "100%" .Values.resources.cpu }}'

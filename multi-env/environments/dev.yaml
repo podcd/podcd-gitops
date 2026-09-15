@@ -4,12 +4,15 @@
 # fail to compile for whichever host does not run it - see resolve.go's
 # "overrides application X, which host Y does not run" check. That is
 # exactly the gap values templating fills: per-app, per-environment tuning
-# lives in values/envs/dev.yaml instead, chosen by each host's own agent.yaml.
+# lives in values/envs/dev.yaml instead, applied through this document's own
+# `values:` - it merges into every host that uses this Environment.
 apiVersion: gitops.podcd.io/v1
 kind: Environment
 metadata:
   name: dev
 spec:
+  values:
+    - values/envs/dev.yaml
   overrides:
     node-exporter:
       restartPolicy: on-failure

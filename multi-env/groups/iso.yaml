@@ -1,6 +1,10 @@
 # iso is the isolated zone: internal-api binds loopback only and gets a
 # looser TCP health check, since nothing outside the host ever calls it
 # directly. Also structural, hence an override rather than a value.
+#
+# values/zones/iso.yaml is currently empty - not every zone needs to
+# contribute a value - but it is still named here, the same way dmz names
+# its own, so a future iso-only value has somewhere to go.
 apiVersion: gitops.podcd.io/v1
 kind: Group
 metadata:
@@ -9,6 +13,8 @@ spec:
   applications:
     - internal-api
     - node-exporter
+  values:
+    - values/zones/iso.yaml
   overrides:
     internal-api:
       ports:

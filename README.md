@@ -257,7 +257,7 @@ So overriding `ports` replaces the application's complete port list.
 
 ## Values templating
 
-Overrides parametrize by naming an application, so they can't help when an application only exists on some hosts. Values templating parametrizes the document itself instead: any file in this repository containing `{{` anywhere is rendered as a Go template against `.Values` before it's parsed. Which values apply is chosen by each host's own `agent.yaml` (`repositories[].values`), not by anything in this repository:
+Overrides parametrize by naming an application, so they can't help when an application only exists on some hosts. Values templating parametrizes the document itself instead: any file containing `{{` anywhere is rendered as a Go template against `.Values` before it's parsed.
 
 ```yaml
 apiVersion: gitops.podcd.io/v1
@@ -268,7 +268,22 @@ spec:
   image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 ```
 
-**Careful with comments.** The whole file becomes a template the moment it contains `{{` anywhere, YAML `#` comments included - a comment that shows the syntax as a literal example (a bare `{{ if }}` with no arguments) is invalid template code and fails to parse. Use a Go template comment instead, which is inert at render time regardless of what it contains:
+Which values apply can be declared in Git, on the `Host`, `Group` or `Environment` that selects the application - the same precedence as an override (environment, then groups in listed order, then the host, host winning):
+
+```yaml
+apiVersion: gitops.podcd.io/v1
+kind: Environment
+metadata:
+  name: prod
+spec:
+  applications: [edge-api]
+  values:
+    - values/prod.yaml
+```
+
+You can alternatively define value files in the `agent.yaml` as well.
+
+**Careful with comments, too.** The whole file becomes a template the moment it contains `{{` anywhere, YAML `#` comments included - a comment that shows the syntax as a literal example (a bare `{{ if }}` with no arguments) is invalid template code and fails to parse. Use a Go template comment instead, which is inert at render time regardless of what it contains:
 
 ```yaml
 {{- /* mentioning {{ if }} in here is fine - this is a template comment, not a YAML one */ -}}
@@ -300,7 +315,7 @@ For example, removing an inherited application does not directly issue a remove 
 
 ## Try it
 
-This repository contains a `local` host running nginx on port `8080`.
+[`minimal/`](./minimal) contains a `local` host running nginx on port `8080` - the smallest complete example, one Application, one Host, no groups or environments. Point an agent at it (`--repo-path minimal`, or `path: minimal` in `agent.yaml`) and:
 
 ```bash
 podcd validate

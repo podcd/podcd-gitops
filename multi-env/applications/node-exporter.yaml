@@ -1,7 +1,5 @@
-# node-exporter runs on every host in this example, dmz and iso alike, dev
-# and prd alike. It has no template markers at all, so the loader never even
-# parses it as a template - identical everywhere is the default, templating
-# is opt-in per file.
+# node-exporter runs on every host in this example
+
 apiVersion: gitops.podcd.io/v1
 kind: Application
 metadata:
