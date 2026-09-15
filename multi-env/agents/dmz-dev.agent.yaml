@@ -1,0 +1,14 @@
+# Reference only: this is NOT a GitOps document (no apiVersion/kind, so the
+# podcd loader ignores it) and podcd never reads it from Git. It belongs on
+# the dmz-dev VM itself, at ~/.config/podcd/agent.yaml, installed by
+# `podcd install` or `podcd config create` and edited with `podcd config set`.
+host: dmz-dev
+repositories:
+  - name: gitops
+    url: https://github.com/podcd/podcd-gitops.git
+    path: multi-env
+    revision: main
+    values:
+      - values/common.yaml
+      - values/zones/dmz.yaml
+      - values/envs/dev.yaml

@@ -1,0 +1,8 @@
+apiVersion: gitops.podcd.io/v1
+kind: Host
+metadata:
+  name: iso-dev
+spec:
+  environment: dev
+  groups:
+    - iso

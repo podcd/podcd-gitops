@@ -1,0 +1,11 @@
+# Reference only - see dmz-dev.agent.yaml. Belongs on the iso-dev VM.
+host: iso-dev
+repositories:
+  - name: gitops
+    url: https://github.com/podcd/podcd-gitops.git
+    path: multi-env
+    revision: main
+    values:
+      - values/common.yaml
+      - values/zones/iso.yaml
+      - values/envs/dev.yaml

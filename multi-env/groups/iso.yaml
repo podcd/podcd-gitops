@@ -1,0 +1,22 @@
+# iso is the isolated zone: internal-api binds loopback only and gets a
+# looser TCP health check, since nothing outside the host ever calls it
+# directly. Also structural, hence an override rather than a value.
+apiVersion: gitops.podcd.io/v1
+kind: Group
+metadata:
+  name: iso
+spec:
+  applications:
+    - internal-api
+    - node-exporter
+  overrides:
+    internal-api:
+      ports:
+        - hostIP: 127.0.0.1
+          host: 8080
+          container: 8080
+      healthcheck:
+        tcp:
+          port: 8080
+        retries: 5
+        interval: 15s

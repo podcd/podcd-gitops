@@ -1,0 +1,14 @@
+# Environment-level values: what stays the same across dmz and iso for dev.
+# Merged on top of the zone file by each host's agent.yaml (later file wins
+# per key), so a host ends up with its zone's repository and its
+# environment's tag.
+logLevel: debug
+resources:
+  memory: 256M
+  cpu: 100%
+edgeApi:
+  image:
+    tag: dev
+internalApi:
+  image:
+    tag: dev

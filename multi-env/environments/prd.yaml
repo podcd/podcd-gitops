@@ -1,0 +1,14 @@
+# prd is shared by dmz-prd and iso-prd, with the same constraint as dev:
+# only node-exporter is common to both, so that is all this document can
+# safely override. edge-api's and internal-api's production sizing and image
+# tag come from values/envs/prd.yaml.
+apiVersion: gitops.podcd.io/v1
+kind: Environment
+metadata:
+  name: prd
+spec:
+  overrides:
+    node-exporter:
+      restartPolicy: always
+      resources:
+        memory: 128M

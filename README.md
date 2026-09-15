@@ -255,6 +255,27 @@ entrypoint
 
 So overriding `ports` replaces the application's complete port list.
 
+## Values templating
+
+Overrides parametrize by naming an application, so they can't help when an application only exists on some hosts. Values templating parametrizes the document itself instead: any file in this repository containing `{{` anywhere is rendered as a Go template against `.Values` before it's parsed. Which values apply is chosen by each host's own `agent.yaml` (`repositories[].values`), not by anything in this repository:
+
+```yaml
+apiVersion: gitops.podcd.io/v1
+kind: Application
+metadata:
+  name: edge-api
+spec:
+  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+```
+
+**Careful with comments.** The whole file becomes a template the moment it contains `{{` anywhere, YAML `#` comments included - a comment that shows the syntax as a literal example (a bare `{{ if }}` with no arguments) is invalid template code and fails to parse. Use a Go template comment instead, which is inert at render time regardless of what it contains:
+
+```yaml
+{{- /* mentioning {{ if }} in here is fine - this is a template comment, not a YAML one */ -}}
+```
+
+See [podcd's README](https://github.com/podcd/podcd#values-templating) for the full guide (opting in, merge order, available functions), and [`multi-env`](./multi-env) for a worked example across four hosts.
+
 ## Resolution and reconciliation
 
 podcd first compiles all of these definitions into a **fully resolved desired state** for the target host.

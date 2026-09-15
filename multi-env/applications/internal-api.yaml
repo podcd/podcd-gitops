@@ -1,0 +1,17 @@
+# internal-api is the private, iso-zone-only counterpart of edge-api. It
+# never leaves the loopback interface (see groups/iso.yaml), and its image
+# and sizing likewise come from {{ .Values }}, filled in per host.
+#
+# repository/tag are `required` because every host (dmz included) renders
+# this document and values/common.yaml + values/envs/ supply both universally
+# - see the longer note in applications/edge-api.yaml.
+apiVersion: gitops.podcd.io/v1
+kind: Application
+metadata:
+  name: internal-api
+spec:
+  image: '{{ required "internalApi.image.repository is required" .Values.internalApi.image.repository }}:{{ required "internalApi.image.tag is required" .Values.internalApi.image.tag }}'
+  env:
+    LOG_LEVEL: '{{ default "info" .Values.logLevel }}'
+  resources:
+    memory: '{{ default "128M" .Values.resources.memory }}'
