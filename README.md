@@ -257,9 +257,10 @@ So overriding `ports` replaces the application's complete port list.
 
 ## Values templating
 
-Overrides parametrize by naming an application, so they can't help when an application only exists on some hosts. Values templating parametrizes the document itself instead: any file containing `{{` anywhere is rendered as a Go template against `.Values` before it's parsed.
+Overrides parametrize by naming an application, so they can't help when an application only exists on some hosts. Values templating parametrizes the document itself instead: a file named `*.tpl` is a Go template, rendered per host against `.Values` and only then read as a document. It is the name that makes it a template - `{{` in a plain `.yaml` is just text.
 
 ```yaml
+# applications/edge-api.yaml.tpl
 apiVersion: gitops.podcd.io/v1
 kind: Application
 metadata:
@@ -283,13 +284,7 @@ spec:
 
 You can alternatively define value files in the `agent.yaml` as well.
 
-**Careful with comments, too.** The whole file becomes a template the moment it contains `{{` anywhere, YAML `#` comments included - a comment that shows the syntax as a literal example (a bare `{{ if }}` with no arguments) is invalid template code and fails to parse. Use a Go template comment instead, which is inert at render time regardless of what it contains:
-
-```yaml
-{{- /* mentioning {{ if }} in here is fine - this is a template comment, not a YAML one */ -}}
-```
-
-See [podcd's README](https://github.com/podcd/podcd#values-templating) for the full guide (opting in, merge order, available functions), and [`multi-env`](./multi-env) for a worked example across four hosts.
+Because a template is rendered before anything reads it, it may use all of Go's `text/template`. It may render any deployable kind (`Application`, `Pod`, `ConfigMap`, `Secret`), but not a `Host`, `Group` or `Environment`, since those decide a host's values in the first place. One consequence: inside a `.tpl`, a YAML `#` comment is still template text, so a comment that quotes template syntax literally (a bare `{{ if }}`) fails to parse - write it as a Go template comment, `{{/* like this */}}`, which renders to nothing.
 
 ## Resolution and reconciliation
 
