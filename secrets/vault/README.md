@@ -26,8 +26,7 @@ podcd config create --force \
 
 ## Step 2 - start Vault
 
-`hosts.yaml` begins with `vault-dev` alone, so the first reconcile brings up the
-dev server and nothing else:
+The first reconcile brings up `vault-dev`. The demo apps are selected too, but their ExternalSecrets cannot be provisioned until Vault is ready; podcd applies Vault and retries only those dependent apps:
 
 ```bash
 podcd reconcile
@@ -71,12 +70,16 @@ AppRole side by side.
 ## Step 4 - deploy the demo apps
 
 ```bash
-# Uncomment the apps in hosts.yaml:
-sed -i 's/# - demo-app/- demo-app/; s/# - demo-tls-app/- demo-tls-app/' secrets/vault/hosts.yaml
-
-# Reconcile: secrets are fetched from Vault, then the pods start
+# Reconcile (or wait for the agent's retry): secrets are fetched from Vault,
+# then the pods start.
 podcd reconcile
 ```
+
+`vault-dev` includes a `vault-init` init container that writes a shared
+pre-start marker and exits with code 0 before Vault and the `vault-seed` sidecar
+start. Its completed `exited` state is expected. The seeder remains a sidecar:
+it must wait for Vault's API, which is only available after regular containers
+start.
 
 ## Step 4 - verify
 
