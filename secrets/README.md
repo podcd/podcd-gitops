@@ -1,6 +1,6 @@
 # Secrets examples
 
-The subfolders are self-contained examples, one per secret backend. Each lives in its own subdirectory; point the agent at it with `podcd config set path secrets/<dir>`.
+The subfolders are self-contained examples, one per secret backend. Each lives in its own subdirectory; point the agent at it with `podcd config set repo-path secrets/<dir>`.
 
 | Example | Backend | Use when |
 |---|---|---|
@@ -39,11 +39,12 @@ spec:
 # 3. The pod references the secret by name, as standard Kubernetes API
 ```
 
-The agent's provision phase resolves every `ExternalSecret` before compiling
-workloads. The resolved `v1/Secret` is bundled into the pod's kube manifest
-(0600), so `podman kube play` receives a complete, playable document. Rotating
-a secret value changes the manifest hash and triggers a pod restart on the next
-reconcile.
+The agent fetches a secret while it compiles this host's workloads, and only
+the ones those workloads reference: a store nobody on this machine uses is
+never contacted. The resolved `v1/Secret` is bundled into the pod's kube
+manifest (0600), so `podman kube play` receives a complete, playable document.
+Rotating a value in the backend changes the manifest hash and restarts the pod
+on the next reconcile.
 
 ---
 
@@ -52,7 +53,7 @@ reconcile.
 ### env-store - values from agent.env
 
 ```bash
-podcd config set path secrets/env-store
+podcd config set repo-path secrets/env-store
 printf 'DEMO_DB_PASSWORD=hunter2\nDEMO_API_TOKEN=tok-demo-1234\n' \
   >> ~/.config/podcd/agent.env
 podcd reconcile
@@ -62,7 +63,7 @@ podcd logs demo-app
 ### file-store - values from files
 
 ```bash
-podcd config set path secrets/file-store
+podcd config set repo-path secrets/file-store
 mkdir -p /run/secrets/demo
 printf 'hunter2'       | install -m 0600 /dev/stdin /run/secrets/demo/db_password
 printf 'tok-demo-1234' | install -m 0600 /dev/stdin /run/secrets/demo/api_token
@@ -73,17 +74,19 @@ podcd logs demo-app
 ### vault - values from HashiCorp Vault
 
 ```bash
-podcd config set path secrets/vault
+podcd config set repo-path secrets/vault
 
-# Stage 1: start Vault (managed by podcd)
+# Start Vault; its sidecar seeds the secrets and sets up the AppRole
 podcd reconcile
 
-# Stage 2: seed demo data
-./secrets/vault/seed-vault.sh
+# Give the agent the credentials it authenticates with
+umask 077 && cat >> ~/.config/podcd/agent.env <<'EOF'
+VAULT_TOKEN=dev-root-token
+VAULT_ROLE_ID=podcd-demo-role-id
+VAULT_SECRET_ID=podcd-demo-secret-id
+EOF
 
-# Stage 3: add token, enable demo-app
-printf 'VAULT_TOKEN=dev-root-token\n' >> ~/.config/podcd/agent.env
-sed -i 's/# - demo-app/- demo-app/' secrets/vault/hosts.yaml
+# Uncomment the demo apps in hosts.yaml, then deploy them
 podcd reconcile
 podcd logs demo-app
 ```

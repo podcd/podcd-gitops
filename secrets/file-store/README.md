@@ -11,7 +11,7 @@ Reads secrets from files on disk. Use this when another tool (a secrets agent, A
 
 ```bash
 # 1. Point the agent at this example
-podcd config set path secrets/file-store
+podcd config set repo-path secrets/file-store
 
 # 2. Write the secret files (0600, never in Git)
 mkdir -p /run/secrets/demo

@@ -12,6 +12,10 @@ spec:
     - values/envs/prd.yaml
   overrides:
     node-exporter:
-      restartPolicy: always
-      resources:
-        memory: 128M
+      spec:
+        restartPolicy: Always
+        containers:
+          - name: node-exporter
+            resources:
+              limits:
+                memory: 128Mi

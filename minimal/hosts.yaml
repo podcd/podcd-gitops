@@ -6,4 +6,3 @@ metadata:
 spec:
   applications:
     - local
-    - local-pod

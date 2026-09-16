@@ -4,8 +4,8 @@
 # environment's tag.
 logLevel: debug
 resources:
-  memory: 256M
-  cpu: 100%
+  memory: 256Mi
+  cpu: "1"
 edgeApi:
   image:
     tag: dev

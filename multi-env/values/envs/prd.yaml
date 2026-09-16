@@ -1,8 +1,8 @@
 # Environment-level values for prd: pinned tags and production sizing.
 logLevel: info
 resources:
-  memory: 512M
-  cpu: 200%
+  memory: 512Mi
+  cpu: "2"
 edgeApi:
   image:
     tag: "1.4.0"

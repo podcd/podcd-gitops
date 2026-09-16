@@ -15,4 +15,5 @@ spec:
     - values/envs/dev.yaml
   overrides:
     node-exporter:
-      restartPolicy: on-failure
+      spec:
+        restartPolicy: OnFailure

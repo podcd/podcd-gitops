@@ -10,7 +10,7 @@ SecretStore (env) + ExternalSecret -> v1/Secret -> use in pod manifest
 
 ```bash
 # 1. Point the agent at this example
-podcd config set path secrets/env-store
+podcd config set repo-path secrets/env-store
 
 # 2. Add the secret values to agent.env (0600, never in Git)
 umask 077
@@ -49,10 +49,10 @@ podcd reconcile
 
 ## How it works
 
-1. The provision phase runs `ExternalSecret` → `SecretStore(env)` → reads  `DEMO_DB_PASSWORD` and `DEMO_API_TOKEN` from the environment.
-2. It writes a resolved `v1/Secret` named `app-secrets` to
-   `~/.local/state/podcd/secrets/app-secrets.yaml` (0600).
-3. That secret is bundled into the pod's kube manifest alongside the pod
-   definition, then played by `podman kube play`.
-4. The manifest hash changes whenever a secret value changes, so the next
+1. Compiling the pod reaches the `app-secrets` reference, so the agent follows
+   `ExternalSecret` → `SecretStore(env)` and reads `DEMO_DB_PASSWORD` and
+   `DEMO_API_TOKEN` from `agent.env` and the environment.
+2. The resolved `v1/Secret` is bundled into the pod's kube manifest alongside
+   the pod definition, written 0600, and played by `podman kube play`.
+3. The manifest hash changes whenever a secret value changes, so the next
    reconcile detects drift and restarts the pod.

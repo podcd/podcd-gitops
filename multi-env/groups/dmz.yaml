@@ -17,12 +17,9 @@ spec:
     - values/zones/dmz.yaml
   overrides:
     edge-api:
-      ports:
-        - host: 443
-          container: 8443
-      healthcheck:
-        http:
-          port: 8443
-          path: /healthz
-        retries: 3
-        interval: 10s
+      spec:
+        containers:
+          - name: edge-api
+            ports:
+              - containerPort: 8443
+                hostPort: 443

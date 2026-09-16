@@ -17,12 +17,10 @@ spec:
     - values/zones/iso.yaml
   overrides:
     internal-api:
-      ports:
-        - hostIP: 127.0.0.1
-          host: 8080
-          container: 8080
-      healthcheck:
-        tcp:
-          port: 8080
-        retries: 5
-        interval: 15s
+      spec:
+        containers:
+          - name: internal-api
+            ports:
+              - containerPort: 8080
+                hostPort: 8080
+                hostIP: 127.0.0.1

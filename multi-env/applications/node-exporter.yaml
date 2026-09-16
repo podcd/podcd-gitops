@@ -1,12 +1,15 @@
 # node-exporter runs on every host in this example
 
-apiVersion: gitops.podcd.io/v1
-kind: Application
+apiVersion: v1
+kind: Pod
 metadata:
   name: node-exporter
 spec:
-  image: docker.io/prom/node-exporter:v1.8.2
-  ports:
-    - hostIP: 127.0.0.1
-      host: 9100
-      container: 9100
+  restartPolicy: Always
+  containers:
+    - name: node-exporter
+      image: docker.io/prom/node-exporter:v1.8.2
+      ports:
+        - containerPort: 9100
+          hostPort: 9100
+          hostIP: 127.0.0.1

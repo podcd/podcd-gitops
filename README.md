@@ -9,7 +9,7 @@ There is no prescribed directory structure. Organize the Git repository however 
 podcd builds a host's desired state from several layers:
 
 ```text
-Application / Pod
+Pod
        ↓
 Environment
        ↓
@@ -18,35 +18,19 @@ Group(s)
 Host
 ```
 
-`Application` and `Pod` define workloads. `Environment`, `Group`, and `Host` determine **which workloads run on a host** and can override their configuration.
+`Pod` defines a workload. `Environment`, `Group`, and `Host` determine **which workloads run on a host** and can override their configuration.
 
-## Application
+## Pod
 
-An `Application` defines a reusable workload:
-
-```yaml
-apiVersion: gitops.podcd.io/v1
-kind: Application
-metadata:
-  name: local
-spec:
-  image: docker.io/library/nginx@sha256:...
-  ports:
-    - host: 8080
-      container: 80
-      hostIP: 127.0.0.1
-  restartPolicy: always
-```
-
-The application defines **what it is**, not which hosts run it.
-
-A `Pod` can be defined similarly:
+A workload is a plain Kubernetes `Pod`, played by podman through a Quadlet `.kube` unit:
 
 ```yaml
 apiVersion: v1
 kind: Pod
 metadata:
-  name: local-pod
+  name: local
+  annotations:
+    io.podcd.networks: "edge"   # no Kubernetes field for this; becomes Network= on the unit
 spec:
   restartPolicy: Always
   containers:
@@ -54,9 +38,17 @@ spec:
       image: docker.io/library/nginx@sha256:...
       ports:
         - containerPort: 80
-          hostPort: 8081
+          hostPort: 8080
           hostIP: 127.0.0.1
+      resources:
+        limits:
+          memory: 256Mi
+      livenessProbe:                # podman runs this; podcd reports the verdict
+        httpGet: { path: /, port: 80 }
 ```
+
+The pod defines **what it is**, not which hosts run it.
+
 
 ## Host
 
@@ -147,9 +139,12 @@ spec:
     - web
   overrides:
     nginx:
-      ports:
-        - host: 9090
-          container: 80
+      spec:
+        containers:
+          - name: nginx
+            ports:
+              - containerPort: 80
+                hostPort: 9090
 ```
 
 The base `nginx` application is unchanged. Only the resolved configuration for this host is different.
@@ -159,7 +154,7 @@ The base `nginx` application is unchanged. Only the resolved configuration for t
 When an application is overridden at multiple levels, later layers win:
 
 ```text
-Application
+Pod
     ↓
 Environment
     ↓
@@ -186,72 +181,75 @@ For example:
 # base group
 overrides:
   nginx:
-    restartPolicy: always
+    spec:
+      restartPolicy: Always
 ```
 
 ```yaml
 # web group
 overrides:
   nginx:
-    ports:
-      - host: 8080
-        container: 80
+    spec:
+      containers:
+        - name: nginx
+          ports:
+            - containerPort: 80
+              hostPort: 8080
 ```
 
 ```yaml
 # host
 overrides:
   nginx:
-    ports:
-      - host: 9090
-        container: 80
+    spec:
+      containers:
+        - name: nginx
+          ports:
+            - containerPort: 80
+              hostPort: 9090
 ```
 
-The resolved application becomes:
+The resolved pod becomes:
 
 ```text
-restartPolicy: always
+restartPolicy: Always
 port: 9090 -> 80
 ```
 
 ## Merge rules
 
-Overrides merge fields rather than replacing the entire application.
+An override is a **strategic merge patch** against the Pod, so it follows Kubernetes' own rules rather than any podcd invention. Containers merge by `name`, ports by `containerPort`, environment variables by `name`, and a plain list is replaced wholesale.
 
-Maps are merged by key:
+Changing one variable leaves the rest alone:
 
 ```yaml
-# application
-env:
-  LOG_LEVEL: info
-  PORT: "8080"
+# pod
+containers:
+  - name: nginx
+    env:
+      - {name: LOG_LEVEL, value: info}
+      - {name: PORT, value: "8080"}
 ```
 
 ```yaml
 # host override
-env:
-  LOG_LEVEL: debug
+spec:
+  containers:
+    - name: nginx
+      env:
+        - {name: LOG_LEVEL, value: debug}
 ```
-
-Result:
 
 ```yaml
-env:
-  LOG_LEVEL: debug
-  PORT: "8080"
+# result
+containers:
+  - name: nginx
+    env:
+      - {name: LOG_LEVEL, value: debug}
+      - {name: PORT, value: "8080"}
 ```
 
-Lists are replaced as a whole. This applies to fields such as:
-
-```text
-ports
-volumes
-networks
-command
-entrypoint
-```
-
-So overriding `ports` replaces the application's complete port list.
+A list with no merge key - `command`, `args` - is replaced entirely, so overriding it means writing the whole list.
 
 ## Values templating
 
@@ -259,12 +257,14 @@ Overrides parametrize by naming an application, so they can't help when an appli
 
 ```yaml
 # applications/edge-api.yaml.tpl
-apiVersion: gitops.podcd.io/v1
-kind: Application
+apiVersion: v1
+kind: Pod
 metadata:
   name: edge-api
 spec:
-  image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+  containers:
+    - name: edge-api
+      image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 ```
 
 Which values apply can be declared in Git, on the `Host`, `Group` or `Environment` that selects the application - the same precedence as an override (environment, then groups in listed order, then the host, host winning):
@@ -282,7 +282,7 @@ spec:
 
 You can alternatively define value files in the `agent.yaml` as well.
 
-Because a template is rendered before anything reads it, it may use all of Go's `text/template`. It may render any deployable kind (`Application`, `Pod`, `ConfigMap`, `Secret`), but not a `Host`, `Group` or `Environment`, since those decide a host's values in the first place. One consequence: inside a `.tpl`, a YAML `#` comment is still template text, so a comment that quotes template syntax literally (a bare `{{ if }}`) fails to parse - write it as a Go template comment, `{{/* like this */}}`, which renders to nothing.
+Because a template is rendered before anything reads it, it may use all of Go's `text/template`. It may render any deployable kind (`Pod`, `ConfigMap`, `Secret`), but not a `Host`, `Group` or `Environment`, since those decide a host's values in the first place. One consequence: inside a `.tpl`, a YAML `#` comment is still template text, so a comment that quotes template syntax literally (a bare `{{ if }}`) fails to parse - write it as a Go template comment, `{{/* like this */}}`, which renders to nothing.
 
 ## Resolution and reconciliation
 
@@ -308,7 +308,7 @@ For example, removing an inherited application does not directly issue a remove 
 
 ## Try it
 
-[`minimal/`](./minimal) contains a `local` host running nginx on port `8080` - the smallest complete example, one Application, one Host, no groups or environments. Point an agent at it (`--repo-path minimal`, or `path: minimal` in `agent.yaml`) and:
+[`minimal/`](./minimal) contains a `local` host running nginx on port `8080` - the smallest complete example, one Pod, one Host, no groups or environments. Point an agent at it (`--repo-path minimal`, or `path: minimal` in `agent.yaml`) and:
 
 ```bash
 podcd validate
