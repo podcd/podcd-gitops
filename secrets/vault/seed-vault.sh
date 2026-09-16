@@ -41,11 +41,17 @@ kv_put() {
 echo "Seeding secrets ..."
 kv_put "secret/data/demo/db"  "password=vault-demo-hunter2" "username=demo-app"
 kv_put "secret/data/demo/api" "api_key=vault-demo-api-key-1234" "region=us-east-1"
+# Stand-ins, not real PEM: the point is that the bytes arrive as files.
+kv_put "secret/data/demo/tls" \
+  "certificate=-----BEGIN CERTIFICATE-----demo-----END CERTIFICATE-----" \
+  "private_key=-----BEGIN PRIVATE KEY-----demo-----END PRIVATE KEY-----" \
+  "ca=-----BEGIN CERTIFICATE-----demo-ca-----END CERTIFICATE-----"
 
 echo ""
 echo "Done. Secrets written:"
 echo "  secret/demo/db  -> password, username"
 echo "  secret/demo/api -> api_key, region"
+echo "  secret/demo/tls -> certificate, private_key, ca"
 echo ""
 echo "Next steps:"
 echo "  printf 'VAULT_TOKEN=dev-root-token\\n' >> ~/.config/podcd/agent.env"

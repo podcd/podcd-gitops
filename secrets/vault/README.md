@@ -31,12 +31,13 @@ curl -s http://127.0.0.1:8200/v1/sys/health | grep initialized
 ./secrets/vault/seed-vault.sh
 ```
 
-This writes two KV secrets using the dev root token (`dev-root-token`):
+This writes three KV secrets using the dev root token (`dev-root-token`):
 
 | Path | Fields |
 |---|---|
 | `secret/demo/db` | `password`, `username` |
 | `secret/demo/api` | `api_key`, `region` |
+| `secret/demo/tls` | `certificate`, `private_key`, `ca` |
 
 ## Step 3 - configure the token and deploy demo-app
 
@@ -44,8 +45,8 @@ This writes two KV secrets using the dev root token (`dev-root-token`):
 # Add the Vault token to agent.env (0600, never in Git)
 printf 'VAULT_TOKEN=dev-root-token\n' >> ~/.config/podcd/agent.env
 
-# Uncomment demo-app in hosts.yaml:
-sed -i 's/# - demo-app/- demo-app/' secrets/vault/hosts.yaml
+# Uncomment the apps in hosts.yaml:
+sed -i 's/# - demo-app/- demo-app/; s/# - demo-tls-app/- demo-tls-app/' secrets/vault/hosts.yaml
 
 # Reconcile: provision phase reads from Vault, demo-app starts
 podcd reconcile
@@ -66,38 +67,43 @@ DB_USERNAME  set: yes
 api_key      set: yes
 ```
 
-## Rotation
+## Secrets as files
 
-Update a secret in Vault and reconcile. The provision phase re-fetches the
-value, the manifest hash changes, and the pod restarts.
+`tls-files.yaml` covers what `demo-app` does not: the `ExternalSecret` produces a
+Secret named differently from itself (`demo-tls` -> `demo-tls-material`), the Pod
+mounts it as a volume so each key lands as a file, and one key is pulled into a
+single variable with `secretKeyRef` rather than dragging everything in with
+`envFrom`. Keys and certificates have no business in an environment variable,
+where every child process and every `podman inspect` can read them.
 
 ```bash
-curl -s -X POST http://127.0.0.1:8200/v1/secret/data/demo/db \
-  -H "X-Vault-Token: dev-root-token" \
-  -H "Content-Type: application/json" \
-  -d '{"data": {"password": "rotated-secret", "username": "demo-app"}}'
+podcd logs demo-tls-app
+```
+
+
 
 podcd reconcile   # detects manifest change, restarts demo-app
 ```
 
-## Using AppRole instead of a token
+## Using AppRoles
 
-For production, replace the static token with AppRole credentials. Both stay
-in `agent.env` and are never in Git:
-
-```yaml
-# stores.yaml
-auth:
-  appRole:
-    roleId: env:VAULT_ROLE_ID
-    secretRef:
-      name: env:VAULT_SECRET_ID
+Against an existing Vault, you will need an approle and an authrole with the correct policies and permissions on the paths it needs to provision.
 ```
 
 ```bash
-# agent.env
+sudo -u podcd bash -lc 'umask 077 && cat >> ~/.config/podcd/agent.env' <<'EOF'
 VAULT_ROLE_ID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 VAULT_SECRET_ID=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+EOF
+```
+
+**A store pointing at it.** Set `server:` on `vault-approle` in `stores.yaml`,
+then aim each `ExternalSecret` at it:
+
+```yaml
+spec:
+  secretStoreRef:
+    name: vault-approle
 ```
 
 ## Tear down
