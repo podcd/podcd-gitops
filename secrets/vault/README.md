@@ -79,7 +79,7 @@ podcd reconcile
 pre-start marker and exits with code 0 before Vault and the `vault-seed` sidecar
 start. Its completed `exited` state is expected. The seeder remains a sidecar:
 it must wait for Vault's API, which is only available after regular containers
-start.
+start. It stays running, detects a dev-Vault reset, and applies the same idempotent seed/AppRole setup again after Vault recovers.
 
 ## Step 4 - verify
 
