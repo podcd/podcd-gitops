@@ -1,0 +1,18 @@
+# Loaded by every host in this example, regardless of zone or environment.
+#
+# This matters because of how templating works: every document in this
+# tree is rendered for every host that loads the tree, whether or not that
+# host's Host/Group/Environment selection actually uses the application -
+# iso-dev renders applications/edge-api.yaml too, even though it never runs
+# edge-api. A value a template treats as `required` (see applications/) must
+# therefore be supplied by every host, not only the ones that end up running
+# that application - which is exactly why the registry path lives here
+# rather than in a zone file, while the image tag (an environment concern)
+# lives in values/envs/, and the public hostname (a true dmz-only concern)
+# is read with a template conditional block rather than `required`.
+edgeApi:
+  image:
+    repository: registry.example.com/edge-api
+internalApi:
+  image:
+    repository: registry.example.com/internal-api

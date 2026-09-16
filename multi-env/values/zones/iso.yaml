@@ -1,0 +1,3 @@
+# iso has no values of its own in this example - the registry path
+# (values/common.yaml) and the image tag (values/envs/) are enough for
+# internal-api. Not every zone needs to contribute something.

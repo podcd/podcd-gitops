@@ -1,0 +1,6 @@
+# Zone-level values: what stays the same across dev and prd for this zone.
+# publicHostname is genuinely dmz-only - iso.yaml does not set it, and
+# applications/edge-api.yaml reads it with a template conditional block
+# rather than `required`, since iso hosts render that document too (see
+# values/common.yaml).
+publicHostname: edge.example.com

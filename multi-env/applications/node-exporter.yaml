@@ -1,0 +1,12 @@
+# node-exporter runs on every host in this example
+
+apiVersion: gitops.podcd.io/v1
+kind: Application
+metadata:
+  name: node-exporter
+spec:
+  image: docker.io/prom/node-exporter:v1.8.2
+  ports:
+    - hostIP: 127.0.0.1
+      host: 9100
+      container: 9100

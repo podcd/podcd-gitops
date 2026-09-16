@@ -1,0 +1,28 @@
+# dmz is the public-facing zone: edge-api is published on all interfaces on
+# 443, with a stricter health check befitting something the internet can
+# reach. This is structural (which port, which interface), so it is an
+# override, not a value - it is the same for dmz-dev and dmz-prd.
+#
+# publicHostname, by contrast, is a value every dmz host shares regardless of
+# environment, so it lives here, in this Group's own `values:`.
+apiVersion: gitops.podcd.io/v1
+kind: Group
+metadata:
+  name: dmz
+spec:
+  applications:
+    - edge-api
+    - node-exporter
+  values:
+    - values/zones/dmz.yaml
+  overrides:
+    edge-api:
+      ports:
+        - host: 443
+          container: 8443
+      healthcheck:
+        http:
+          port: 8443
+          path: /healthz
+        retries: 3
+        interval: 10s

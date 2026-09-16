@@ -1,0 +1,9 @@
+apiVersion: gitops.podcd.io/v1
+kind: Host
+metadata:
+  name: dmz-dev
+spec:
+  environment: dev
+  groups:
+    - all
+    - dmz

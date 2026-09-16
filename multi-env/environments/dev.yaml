@@ -1,0 +1,18 @@
+# dev is shared by dmz-dev and iso-dev, but those two hosts only have
+# node-exporter in common (edge-api and internal-api each belong to one
+# zone's group only). An override here for edge-api or internal-api would
+# fail to compile for whichever host does not run it - see resolve.go's
+# "overrides application X, which host Y does not run" check. That is
+# exactly the gap values templating fills: per-app, per-environment tuning
+# lives in values/envs/dev.yaml instead, applied through this document's own
+# `values:` - it merges into every host that uses this Environment.
+apiVersion: gitops.podcd.io/v1
+kind: Environment
+metadata:
+  name: dev
+spec:
+  values:
+    - values/envs/dev.yaml
+  overrides:
+    node-exporter:
+      restartPolicy: on-failure
