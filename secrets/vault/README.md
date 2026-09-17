@@ -150,5 +150,5 @@ spec:
 ## Tear down
 
 ```bash
-podcd reconcile --prune   # or: podcd prune --all
+podcd teardown
 ```
